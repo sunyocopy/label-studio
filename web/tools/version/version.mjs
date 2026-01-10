@@ -85,7 +85,7 @@ const getVersionData = async () => {
   // Get the current branch of the latest commit
   const contains = (await gitBranch(["--contains", commit])).split("\n");
   let branch = (contains.find((line) => line.startsWith("develop") || line.startsWith("*")) ?? "")
-    .replace("*", "")
+    .replaceAll("*", "") // แก้เป็น replaceAll เพื่อลบดอกจันทั้งหมดที่อาจจะติดมา
     .trim();
 
   if (branch === "" || branch.includes("HEAD")) {
