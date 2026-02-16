@@ -288,6 +288,7 @@ export const KonvaVector = forwardRef<KonvaVectorRef, KonvaVectorProps>((props, 
     pointStroke = DEFAULT_POINT_STROKE,
     pointStrokeSelected = DEFAULT_POINT_STROKE_SELECTED,
     pointStrokeWidth = DEFAULT_POINT_STROKE_WIDTH,
+    pointStyle = "circle",
   } = props;
 
   // Normalize input points to BezierPoint format
@@ -3813,6 +3814,7 @@ export const KonvaVector = forwardRef<KonvaVectorRef, KonvaVectorProps>((props, 
             pointStroke={pointStroke}
             pointStrokeSelected={pointStrokeSelected}
             pointStrokeWidth={pointStrokeWidth}
+            pointStyle={pointStyle}
             activePointId={activePointId}
             maxPoints={maxPoints}
             onPointClick={(e, pointIndex) => {
@@ -4226,6 +4228,7 @@ export const KonvaVector = forwardRef<KonvaVectorRef, KonvaVectorProps>((props, 
             pointStroke={pointStroke}
             pointStrokeSelected={pointStrokeSelected}
             pointStrokeWidth={pointStrokeWidth}
+            pointStyle={pointStyle}
             activePointId={activePointId}
             maxPoints={maxPoints}
             onPointClick={(e, pointIndex) => {
@@ -4322,6 +4325,9 @@ export const KonvaVector = forwardRef<KonvaVectorRef, KonvaVectorProps>((props, 
                 }
 
                 // Check if we're about to close the path - prevent point selection in this case
+                // IMPORTANT: Also check isActivePointEligibleForClosing to ensure closing is actually possible
+                // When the region is unselected and no activePointId is set, clicking on first/last point
+                // should NOT be blocked - it should select the point so drawing can start from that endpoint
                 if (
                   shouldClosePathOnPointClick(
                     pointIndex,
@@ -4333,7 +4339,12 @@ export const KonvaVector = forwardRef<KonvaVectorRef, KonvaVectorProps>((props, 
                       activePointId,
                     } as any,
                     e,
-                  )
+                  ) &&
+                  isActivePointEligibleForClosing({
+                    initialPoints,
+                    skeletonEnabled,
+                    activePointId,
+                  } as any)
                 ) {
                   return; // Block the selection
                 }

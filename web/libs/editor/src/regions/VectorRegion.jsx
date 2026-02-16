@@ -164,6 +164,10 @@ const Model = types
           return { enabled: 6, disabled: 4 };
       }
     },
+    // Point style: "circle" or "rectangle"
+    get pointStyle() {
+      return self.control?.pointstyle ?? "circle";
+    },
     get disabled() {
       const tool = self.parent?.getToolsManager().findSelectedTool();
       return (tool?.disabled ?? false) || self.isReadOnly() || (!self.selected && !self.isDrawing);
@@ -625,7 +629,8 @@ const HtxVectorView = observer(({ item, suggestion }) => {
   const { x: offsetX, y: offsetY } = item.parent?.layerZoomScalePosition ?? { x: 0, y: 0 };
   const disabled = item.disabled || suggestion || store.annotationStore.selected.isLinkingMode;
   const selected = !disabled; // Invert disabled to selected for KonvaVector
-  const isDisabled = item.locked || item.parent?.getSkipInteractions(); // Completely disable all interactions when locked or Pan tool is active
+  // Completely disable all interactions when locked, readonly (e.g., in View All mode), or Pan tool is active
+  const isDisabled = item.locked || item.isReadOnly() || item.parent?.getSkipInteractions();
 
   // Wait for stage to be properly initialized
   if (!item.parent?.stageWidth || !item.parent?.stageHeight) {
@@ -745,6 +750,7 @@ const HtxVectorView = observer(({ item, suggestion }) => {
           pointStroke={item.selected ? "#ff0000" : regionStyles.strokeColor}
           pointStrokeSelected="#ff6b35"
           pointStrokeWidth={item.selected ? 2 : 1}
+          pointStyle={item.pointStyle}
           disableInternalPointAddition={true}
         />
 
