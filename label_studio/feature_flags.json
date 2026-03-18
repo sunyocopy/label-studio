@@ -1797,6 +1797,33 @@
       "version": 3,
       "deleted": false
     },
+    "fflag_feat_all_optic_interfaces_short": {
+      "key": "fflag_feat_all_optic_interfaces_short",
+      "on": false,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [
+        true,
+        false
+      ],
+      "clientSideAvailability": {
+        "usingMobileKey": false,
+        "usingEnvironmentId": false
+      },
+      "clientSide": false,
+      "salt": "aac12b5313fb48628ad3f9af43837671",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 2,
+      "deleted": false
+    },
     "fflag_feat_all_utc_179_custom_function_logs": {
       "key": "fflag_feat_all_utc_179_custom_function_logs",
       "on": true,
@@ -2175,6 +2202,33 @@
       "version": 3,
       "deleted": false
     },
+    "fflag_feat_bros_749_slack_integration": {
+      "key": "fflag_feat_bros_749_slack_integration",
+      "on": false,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [
+        true,
+        false
+      ],
+      "clientSideAvailability": {
+        "usingMobileKey": false,
+        "usingEnvironmentId": false
+      },
+      "clientSide": false,
+      "salt": "54bdd31cf1f54535a3d96615baee2398",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 2,
+      "deleted": false
+    },
     "fflag_feat_bros_836_improving_sso_saml_scim": {
       "key": "fflag_feat_bros_836_improving_sso_saml_scim",
       "on": false,
@@ -2196,6 +2250,33 @@
       },
       "clientSide": false,
       "salt": "9afceddc39fb434f9c660aae46c43c19",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 2,
+      "deleted": false
+    },
+    "fflag_feat_bros_846_social_login": {
+      "key": "fflag_feat_bros_846_social_login",
+      "on": false,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [
+        true,
+        false
+      ],
+      "clientSideAvailability": {
+        "usingMobileKey": false,
+        "usingEnvironmentId": false
+      },
+      "clientSide": false,
+      "salt": "23962325c44e4c09a5bdb2207560afa4",
       "trackEvents": false,
       "trackEventsFallthrough": false,
       "debugEventsUntilDate": null,
@@ -4977,6 +5058,33 @@
       },
       "clientSide": false,
       "salt": "d997d229777d4b7fa74796d017284f7d",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 3,
+      "deleted": false
+    },
+    "fflag_fix_fit_1511_resolve_multiple_cloud_uris": {
+      "key": "fflag_fix_fit_1511_resolve_multiple_cloud_uris",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [
+        true,
+        false
+      ],
+      "clientSideAvailability": {
+        "usingMobileKey": false,
+        "usingEnvironmentId": false
+      },
+      "clientSide": false,
+      "salt": "8a4170cf671f4a05b6d6b5dbcc3be2c1",
       "trackEvents": false,
       "trackEventsFallthrough": false,
       "debugEventsUntilDate": null,
