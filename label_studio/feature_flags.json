@@ -2229,9 +2229,36 @@
       "version": 2,
       "deleted": false
     },
+    "fflag_feat_bros_763_gcs_sa_impersonation": {
+      "key": "fflag_feat_bros_763_gcs_sa_impersonation",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [
+        true,
+        false
+      ],
+      "clientSideAvailability": {
+        "usingMobileKey": false,
+        "usingEnvironmentId": false
+      },
+      "clientSide": false,
+      "salt": "5642512d9aff42d993200baa62a7842e",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 3,
+      "deleted": false
+    },
     "fflag_feat_bros_836_improving_sso_saml_scim": {
       "key": "fflag_feat_bros_836_improving_sso_saml_scim",
-      "on": false,
+      "on": true,
       "prerequisites": [],
       "targets": [],
       "contextTargets": [],
@@ -2253,7 +2280,7 @@
       "trackEvents": false,
       "trackEventsFallthrough": false,
       "debugEventsUntilDate": null,
-      "version": 2,
+      "version": 3,
       "deleted": false
     },
     "fflag_feat_bros_846_social_login": {
@@ -2281,6 +2308,33 @@
       "trackEventsFallthrough": false,
       "debugEventsUntilDate": null,
       "version": 2,
+      "deleted": false
+    },
+    "fflag_feat_bros_893_no_same_origin": {
+      "key": "fflag_feat_bros_893_no_same_origin",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [
+        true,
+        false
+      ],
+      "clientSideAvailability": {
+        "usingMobileKey": false,
+        "usingEnvironmentId": false
+      },
+      "clientSide": false,
+      "salt": "a6b1af52243b412e8743fea090688ec5",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 3,
       "deleted": false
     },
     "fflag_feat_dev_2755_regions_list_grouped_by_labels_with_ordered_collapse_short": {
@@ -5589,6 +5643,33 @@
       "trackEventsFallthrough": false,
       "debugEventsUntilDate": null,
       "version": 3,
+      "deleted": false
+    },
+    "fflag_fix_plt_1048_concurrent_project_summary_update_19032026_short": {
+      "key": "fflag_fix_plt_1048_concurrent_project_summary_update_19032026_short",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [
+        true,
+        false
+      ],
+      "clientSideAvailability": {
+        "usingMobileKey": false,
+        "usingEnvironmentId": false
+      },
+      "clientSide": false,
+      "salt": "83ba56b4ceb047b8b500157c40fa1141",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 2,
       "deleted": false
     },
     "fflag_front_dia_1150_ddisco_sneak_preview": {
