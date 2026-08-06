@@ -122,6 +122,9 @@ class MLBackendListAPI(generics.ListCreateAPIView):
     filterset_fields = ['is_interactive']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return MLBackend.objects.none()
+
         project_pk = self.request.query_params.get('project')
         project = generics.get_object_or_404(Project, pk=project_pk)
 
@@ -230,7 +233,7 @@ class MLBackendDetailAPI(generics.RetrieveUpdateDestroyAPIView):
         After you add an ML backend, call this API with the ML backend ID to start training with 
         already-labeled tasks. 
         
-        Get the ML backend ID by [listing the ML backends for a project](https://labelstud.io/api/#operation/api_ml_list).
+        Get the ML backend ID by [listing the ML backends for a project](api:GET/api/ml/).
         """,
         parameters=[
             OpenApiParameter(
