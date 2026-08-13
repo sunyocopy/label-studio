@@ -65,6 +65,8 @@ class _Operator(BaseModel):
 Operator = _Operator()
 USER_FILTER_FIELDS = frozenset({'annotators', 'updated_by', 'reviewers', 'comment_authors', 'skipped_by_annotator'})
 USER_FILTER_VALUE_OPERATORS = frozenset({Operator.CONTAINS, Operator.NOT_CONTAINS})
+# Fields whose root/child hooks implement "is empty". skipped_by_annotator does not (FIT-2435).
+USER_FILTER_EMPTY_FIELDS = frozenset({'annotators', 'updated_by', 'reviewers', 'comment_authors'})
 LEGACY_USER_FILTER_OPERATORS = {
     Operator.EQUAL: Operator.CONTAINS,
     Operator.IN_LIST: Operator.CONTAINS,
@@ -73,10 +75,45 @@ LEGACY_USER_FILTER_OPERATORS = {
 }
 
 
+def allowed_user_filter_operators(field_name):
+    """Operators permitted for a user-list filter field (serializer + apply_filters)."""
+    allowed = set(USER_FILTER_VALUE_OPERATORS)
+    if field_name in USER_FILTER_EMPTY_FIELDS:
+        allowed.add(Operator.EMPTY)
+    return frozenset(allowed)
+
+
+class ResolvedUserFilterIds(list):
+    """Marker for IDs expanded by trusted backend code after client-input validation."""
+
+
 def validate_user_filter_operator(field_name, operator, value):
-    if field_name in USER_FILTER_FIELDS and isinstance(value, list) and operator not in USER_FILTER_VALUE_OPERATORS:
-        allowed = ', '.join(sorted(USER_FILTER_VALUE_OPERATORS))
-        raise ValidationError(f'List-valued user filters support only these operators: {allowed}.')
+    """Reject unsupported operators for user-list filters (FIT-2435).
+
+    List-valued membership filters only support contains / not_contains.
+    Empty is allowed only for fields in USER_FILTER_EMPTY_FIELDS.
+    Legacy scalar equal/not_equal/in_list remain accepted so normalize_persisted_user_filter
+    can recover historical views.
+    """
+    if field_name not in USER_FILTER_FIELDS:
+        return
+
+    if isinstance(value, list):
+        if operator not in USER_FILTER_VALUE_OPERATORS:
+            allowed = ', '.join(sorted(USER_FILTER_VALUE_OPERATORS))
+            raise ValidationError(f'List-valued user filters support only these operators: {allowed}.')
+        return
+
+    allowed = allowed_user_filter_operators(field_name)
+    if operator in allowed:
+        return
+    if operator in LEGACY_USER_FILTER_OPERATORS:
+        return
+
+    allowed_label = ', '.join(sorted(allowed))
+    raise ValidationError(
+        f'User filter "{field_name}" does not support operator "{operator}". Allowed: {allowed_label}.'
+    )
 
 
 def normalize_persisted_user_filter(field_name, operator, value):
@@ -84,6 +121,9 @@ def normalize_persisted_user_filter(field_name, operator, value):
     if field_name not in USER_FILTER_FIELDS:
         return operator, value
     if operator == Operator.EMPTY:
+        if field_name not in USER_FILTER_EMPTY_FIELDS:
+            # Drop unsupported empty (e.g. skipped_by_annotator) to a no-op contains.
+            return Operator.CONTAINS, []
         try:
             empty_value = cast_bool_from_str(value)
         except ValueError:
@@ -535,7 +575,11 @@ def parse_user_filter_ids(value):
     """Parse a scalar or list user-filter value into deduped integer user ids (FIT-2253)."""
     if value is None:
         return []
-    if isinstance(value, list) and len(value) > settings.DATA_MANAGER_LIST_FILTER_MAX_VALUES:
+    if (
+        isinstance(value, list)
+        and not isinstance(value, ResolvedUserFilterIds)
+        and len(value) > settings.DATA_MANAGER_LIST_FILTER_MAX_VALUES
+    ):
         raise ValidationError(
             f'User filter list exceeds maximum size of {settings.DATA_MANAGER_LIST_FILTER_MAX_VALUES}.'
         )
@@ -583,6 +627,8 @@ def apply_filters(queryset, filters, project, request):
 
     # convert conjunction to orm statement
     custom_filter_expressions = load_func(settings.DATA_MANAGER_CUSTOM_FILTER_EXPRESSIONS)
+    preprocess_field_name = load_func(settings.PREPROCESS_FIELD_NAME)
+    preprocess_filter = load_func(settings.DATA_MANAGER_PREPROCESS_FILTER)
 
     # Combine child filters with their parent in the same filter expression.
     # Result-parent hooks consume this complete line and compile one correlated
@@ -605,7 +651,6 @@ def apply_filters(queryset, filters, project, request):
                 continue
 
             # django orm loop expression attached to column name
-            preprocess_field_name = load_func(settings.PREPROCESS_FIELD_NAME)
             field_name, _ = preprocess_field_name(_filter.filter, project)
             if _is_stale_agreement_field(queryset, field_name):
                 logger.warning('Skipping stale agreement filter field: %s', field_name)
@@ -613,7 +658,6 @@ def apply_filters(queryset, filters, project, request):
             validate_user_filter_operator(field_name, _filter.operator, _filter.value)
 
             # filter pre-processing, value type conversion, etc..
-            preprocess_filter = load_func(settings.DATA_MANAGER_PREPROCESS_FILTER)
             _filter = preprocess_filter(_filter, field_name)
 
             # Semantic validation for in_list / not_in_list (BROS-1203). Runs *before*
@@ -1170,6 +1214,8 @@ class PreparedTaskManager(models.Manager):
             if project is None:
                 first_task = queryset.first()
                 project = None if first_task is None else first_task.project
+                if project is not None:
+                    queryset.project = project
             overlay_map = overlay_func(request=request, project=project) or {}
             if isinstance(overlay_map, dict) and overlay_map:
                 # Only add overlay_map keys if they're explicitly requested in fields_for_evaluation
@@ -1199,6 +1245,8 @@ class PreparedTaskManager(models.Manager):
         if project is None:
             first_task = queryset.first()
             project = None if first_task is None else first_task.project
+            if project is not None:
+                queryset.project = project
 
         # db annotations applied only if we need them in ordering or filters
         for field in annotations_map.keys():
@@ -1252,9 +1300,13 @@ class PreparedTaskManager(models.Manager):
         # Support both single and multiple projects
         if prepare_params.is_multi_project:
             queryset = TaskQuerySet(self.model).filter(project__in=prepare_params.projects)
+            project = Project.objects.get(pk=prepare_params.projects[0])
+            queryset.project = project
         else:
             queryset = TaskQuerySet(self.model).filter(project=prepare_params.project)
             project = Project.objects.get(pk=prepare_params.project)
+            # Attach project before annotate_queryset so it does not call queryset.first().
+            queryset.project = project
             _set_prefilter_task_ids_for_agreement(request, queryset, prepare_params, project)
         fields_for_filter_ordering = get_fields_for_filter_ordering(prepare_params)
         queryset = self.annotate_queryset(queryset, fields_for_evaluation=fields_for_filter_ordering, request=request)
