@@ -30,7 +30,12 @@ from tasks.ordering import apply_annotation_ordering, apply_prediction_ordering
 from tasks.result_utils import dedupe_annotation_result_list, sanitize_null_bytes
 from tasks.validation import TaskValidator
 from users.models import User
-from users.serializers import AnnotatorReviewerFirewall, AnonymizedUserPrimaryKeyRelatedField, UserSerializer
+from users.serializers import (
+    AnnotatorReviewerFirewall,
+    AnonymizedUserPrimaryKeyRelatedField,
+    UserSerializer,
+    is_user_deleted,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -218,7 +223,15 @@ class AnnotationSerializer(FlexFieldsModelSerializer):
         project = self._resolve_project_for_validation(data)
         custom_interface_validator = load_func(getattr(settings, 'CUSTOM_INTERFACE_ANNOTATION_VALIDATOR', None))
         if custom_interface_validator and project:
-            validation_errors = custom_interface_validator(project, data.get('result', []))
+            task = data.get('task') or self.context.get('task') or getattr(self.instance, 'task', None)
+            request = self.context.get('request')
+            user = getattr(request, 'user', None) if request is not None else None
+            # Integrity binds to the annotation author, not the acting user:
+            # a reviewer editing a contributor's annotation must validate
+            # against the contributor's uploads.
+            if self.instance is not None:
+                user = getattr(self.instance, 'completed_by', None) or user
+            validation_errors = custom_interface_validator(project, data.get('result', []), task=task, user=user)
             if validation_errors:
                 raise ValidationError(f'Error validating annotation: {validation_errors}')
 
@@ -233,6 +246,10 @@ class AnnotationSerializer(FlexFieldsModelSerializer):
         requester = getattr(request, 'user', None) if request is not None else None
         if AnnotatorReviewerFirewall.should_anonymize(user=user, requester=requester):
             return AnnotatorReviewerFirewall.role_label(user=user, requester=requester)
+
+        project = self.context.get('project') or getattr(annotation, 'project', None)
+        if is_user_deleted(user, context=self.context, project=project):
+            return f'Deleted User {user.id} deleted-{user.id}-user@example.com, {user.id}'
 
         name = user.first_name
         if len(user.last_name):
@@ -293,6 +310,10 @@ class AnnotationStubSerializer(FlexFieldsModelSerializer):
         requester = getattr(request, 'user', None) if request is not None else None
         if AnnotatorReviewerFirewall.should_anonymize(user=user, requester=requester):
             return AnnotatorReviewerFirewall.role_label(user=user, requester=requester)
+
+        project = self.context.get('project') or getattr(annotation, 'project', None)
+        if is_user_deleted(user, context=self.context, project=project):
+            return f'Deleted User {user.id} deleted-{user.id}-user@example.com, {user.id}'
 
         name = user.first_name
         if len(user.last_name):
@@ -1049,6 +1070,12 @@ class AnnotationDraftSerializer(ModelSerializer):
         requester = getattr(request, 'user', None) if request is not None else None
         if AnnotatorReviewerFirewall.should_anonymize(user=user, requester=requester):
             return AnnotatorReviewerFirewall.role_label(user=user, requester=requester)
+
+        project = self.context.get('project')
+        if not project and getattr(draft, 'task', None):
+            project = getattr(draft.task, 'project', None)
+        if is_user_deleted(user, context=self.context, project=project):
+            return f'Deleted User {user.id} deleted-{user.id}-user@example.com, {user.id}'
 
         name = user.first_name
         last_name = user.last_name

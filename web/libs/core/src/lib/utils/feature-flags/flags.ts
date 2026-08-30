@@ -253,3 +253,22 @@ export const FF_ANNOTATOR_EVALUATION_METRIC = "fflag_feat_utc_1085_annotator_eva
  * time for a configured coverage percent before rotating to another annotator.
  */
 export const FF_UTC_1079_REVIEW_ORDER_BY_ANNOTATOR = "fflag_feat_utc_1079_review_order_by_annotator";
+
+/**
+ * Ask AI "Annotator mode" (UTC-1233): a switch in the assistant panel that lets somebody running a
+ * project be answered exactly as one of their own annotators would be, so they can see for
+ * themselves what their workforce is told. Experiment gate, off by default, and layered on top of
+ * the workforce rollout flag — with that one off the server refuses every question asked in this
+ * mode, so the switch is not offered either.
+ */
+export const FF_ASK_AI_ANNOTATOR_MODE = "fflag_utc_1233_admin_sees_worker_toggle_ask_ai";
+
+/**
+ * Ask AI "Agent" (UTC-1233): the assistant answers by looking things up for itself — the project,
+ * the task, the annotation, the courses — instead of being handed one fixed bundle of context. The
+ * only thing this flag decides in the browser is whether the "Think longer" control is offered in
+ * the composer; whether a question is actually answered by the agent is decided per organization
+ * on the assistant's own side, so with the flag on but the agent not enabled the control is simply
+ * a slower ordinary answer rather than a broken one.
+ */
+export const FF_ASK_AI_AGENT = "fflag_utc_1233_ask_ai_agent";
